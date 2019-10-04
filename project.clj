@@ -10,7 +10,8 @@
                  [org.clojure/clojurescript "1.10.520"]
                  [org.clojure/core.async  "0.4.500"]
                  [rum "0.11.3"]
-                 [antizer "3.19.8-0"]
+                 [net.ofnir/antizer "3.22.0-0"]
+                 [cljsjs/filesaverjs "1.3.3-0"]
                  [clj-commons/citrus "3.2.3"]]
 
   :plugins [[lein-figwheel "0.5.19"]
