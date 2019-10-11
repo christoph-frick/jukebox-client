@@ -126,12 +126,13 @@
 (defmulti navigation identity)
 
 (defmethod navigation :init []
-  {:http {:url "http://localhost:8080/jukebox/"
+  (let [root "http://localhost:8080/_media"]
+      {:http {:url root
           :on-success :on-success
           :on-failure :on-failure}
-   :state {:root "http://localhost:8080/jukebox"
+   :state {:root root
            :path "/"
-           :loading? true}})
+           :loading? true}}))
 
 (defmethod navigation :goto [_ [path] {:keys [root] :as state}]
   {:http {:url (str root path)
