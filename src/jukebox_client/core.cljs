@@ -104,8 +104,12 @@
     [:a {:href (str "#" (history-path) name "/")} name])
 
 (rum/defc PlayList
-  [root path data]
-  (ant/table {:style {:background "white"}
+  [loading? root path data]
+  (ant/table {:loading loading?
+              :style {:background "white"}
+              :pagination {:position :top
+                           :showTotal (fn [total [start end]] (str start "-" end " of " total " items"))
+                           :showQuickJumper true}
               :dataSource data
               :columns [{:title ""
                          :align :center
@@ -141,24 +145,24 @@
   rum/reactive
   [r]
   (let [{:keys [loading? error root path filter-term effective-data]} (rum/react (citrus/subscription r [:navigation]))]
-    (ant/layout {:style {:min-height "100vh"}}
-                (ant/layout-content
-                 {:style {:padding "0 2em"}}
-                 [:div {:style {:margin-top "2ex" :margin-bottom "2ex"}}
-                  (ant/row
-                   (ant/col {:span 18}
-                            (Breadcrumbs))
+    (ant/layout
+     (ant/layout-content
+      {:style {:padding "0 2em"}}
+      [:div {:style {:margin "2ex 0"}}
+       (ant/row
+        (ant/col {:span 18}
+                 (Breadcrumbs))
+        (ant/col {:span 6 :align :right}
+                 (ant/input-search {:value filter-term
+                                    :placeholder "Filter by name"
+                                    :allow-clear true
+                                    :on-change #(citrus/dispatch! r :navigation :filter (.-value (.-target %)))})))]
 
-                   (ant/col {:span 6 :align :right}
-                            (ant/input-search {:value filter-term
-                                               :placeholder "Filter by name"
-                                               :allow-clear true
-                                               :on-change #(citrus/dispatch! r :navigation :filter (.-value (.-target %)))})))]
-
-                 (cond
-                   loading? (ant/spin)
-                   error (ant/message-error error)
-                   :else (PlayList root path effective-data))))))
+      [:div
+       {:style {:height "200px"}}
+       (cond
+         error (ant/message-error error)
+         :else (PlayList loading? root path effective-data))]))))
 
 ;;; controllers
 
