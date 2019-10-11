@@ -3,6 +3,7 @@
             [antizer.rum :as ant]
             [rum.core :as rum]
             [citrus.core :as citrus]
+            [cljs.core.async :as async]
             [goog.events :as events]
             [goog.history.EventType :as HistoryEventType]
             [cljsjs.filesaverjs])
@@ -42,6 +43,10 @@
             #js {:type "audio/mpegurl"})
         "playlist.m3u"))
 
+(defn item-to-path
+  [root item]
+  (str root "/" (js/encodeURI (aget item "name"))))
+
 (defn to-playlist
   [urls]
   (str/join "\n" urls))
@@ -57,7 +62,7 @@
   (-> root
       (request)
       (.then (partial filter (is-type?-fn "file")))
-      (.then (partial map (fn [item] (str root "/" (js/encodeURI (aget item "name"))))))))
+      (.then (partial map (partial item-to-path root)))))
 
 (defn playlist
   [root]
