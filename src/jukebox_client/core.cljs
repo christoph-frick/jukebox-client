@@ -8,6 +8,17 @@
             [cljsjs.filesaverjs])
   (:import (goog.history Html5History)))
 
+;;; config
+
+(goog-define env "dev")
+
+(def root
+  (str
+   (if (= env "dev")
+     "http://localhost:8080"
+     (js/window.location))
+   "/_media"))
+
 ;;; tools
 
 (defn request
@@ -68,71 +79,86 @@
    (let [parts (history-path-parts)]
      (for [i (range (count parts))
            :let [path (str/join "/" (subvec parts 0 (inc i)))]]
-       (ant/breadcrumb-item
-        [:a {:href (str "#" path)} (js/decodeURI (nth parts i))])))))
+       (if (zero? i)
+         (ant/breadcrumb-item
+          {:id :home}
+          [:a {:href "#"} (ant/icon {:type :home})])
+         (ant/breadcrumb-item
+          {:id path}
+          [:a {:href (str "#" path)} (js/decodeURI (nth parts i))]))))))
 
 (rum/defc GoDown
     [name]
     [:a {:href (str "#" (history-path) "/" name)} name])
 
+(rum/defc PlayList
+  [root path data]
+  (ant/table {:style {:background "white"}
+              :dataSource data
+              :columns [{:title ""
+                         :align :center
+                         :width 0
+                         :render (fn [_ item]
+                                   (ant/button {:icon :caret-right
+                                                :type :primary
+                                                :ghost true
+                                                :shape :circle
+                                                :size :large
+                                                :onClick (fn [] (println) (playlist (str root "/" path "/" (aget item (js/encodeURI "name")))))}))}
+                        {:title "Type"
+                         :align :center
+                         :width 0
+                         :dataIndex :type
+                         :render (fn [type]
+                                   (ant/icon {:type (case type
+                                                      "directory" :folder
+                                                      "file" :file
+                                                      :question)}))}
+
+                        {:title "Name"
+                         :dataIndex :name
+                         :render (fn [name item]
+                                   (if (= (aget item "type") "directory")
+                                     (GoDown name)
+                                     name))}
+                        #_{:title "Modified"
+                           :width 0
+                           :dataIndex :mtime}]}))
+
 (rum/defc App <
   rum/reactive
   [r]
-  (let [{:keys [loading? error root path data]} (rum/react (citrus/subscription r [:navigation]))]
+  (let [{:keys [loading? error root path filter-term effective-data]} (rum/react (citrus/subscription r [:navigation]))]
     (ant/layout {:style {:min-height "100vh"}}
                 (ant/layout-content
                  {:style {:padding "0 2em"}}
                  [:div {:style {:margin-top "2ex" :margin-bottom "2ex"}}
-                  (Breadcrumbs)]
+                  (ant/row
+                   (ant/col {:span 18}
+                            (Breadcrumbs))
+
+                   (ant/col {:span 6 :align :right}
+                            (ant/input-search {:value filter-term
+                                               :placeholder "Filter by name"
+                                               :allow-clear true
+                                               :on-change #(citrus/dispatch! r :navigation :filter (.-value (.-target %)))})))]
+
                  (cond
                    loading? (ant/spin)
                    error (ant/message-error error)
-                   (seq data)
-                   (ant/table {:style {:background "white"}
-                               :pagination {:position :top}
-                               :dataSource data
-                               :columns [{:title ""
-                                          :align :center
-                                          :width 0
-                                          :render (fn [_ item]
-                                                    (ant/button {:icon :caret-right
-                                                                 :type :primary
-                                                                 :ghost true
-                                                                 :shape :circle
-                                                                 :size :large
-                                                                 :onClick (fn [] (println) (playlist (str root "/" path "/" (aget item (js/encodeURI "name")))))}))}
-                                         {:title "Type"
-                                          :align :center
-                                          :width 0
-                                          :dataIndex :type
-                                          :render (fn [type]
-                                                    (ant/icon {:type (case type
-                                                                       "directory" :folder
-                                                                       "file" :file
-                                                                       :question)}))}
-
-                                         {:title "Name"
-                                          :dataIndex :name
-                                          :render (fn [name item]
-                                                    (if (= (aget item "type") "directory")
-                                                      (GoDown name)
-                                                      name))}
-                                         #_{:title "Modified"
-                                            :width 0
-                                            :dataIndex :mtime}]}))))))
+                   :else (PlayList root path effective-data))))))
 
 ;;; controllers
 
 (defmulti navigation identity)
 
 (defmethod navigation :init []
-  (let [root "http://localhost:8080/_media"]
-      {:http {:url root
+  {:http {:url root
           :on-success :on-success
           :on-failure :on-failure}
    :state {:root root
            :path "/"
-           :loading? true}}))
+           :loading? true}})
 
 (defmethod navigation :goto [_ [path] {:keys [root] :as state}]
   {:http {:url (str root path)
@@ -140,19 +166,29 @@
           :on-failure :on-failure}
    :state (assoc state
                  :path path
+                 :filter-term nil
                  :data nil
+                 :effective-data nil
                  :error nil
                  :loading? true)})
+
+(defmethod navigation :filter [_ [term] {:keys [data] :as state}]
+  (let [lower-case-term (str/lower-case term)]
+    {:state (assoc state
+                   :filter-term term
+                   :effective-data (seq (sort-by #(aget % "name") (filter #(str/includes? (str/lower-case (aget % "name")) lower-case-term) data))))}))
 
 (defmethod navigation :on-success [_ [resp] state]
   {:state (assoc state
                  :data resp
+                 :effective-data resp
                  :loading? false
                  :error nil)})
 
 (defmethod navigation :on-failure [_ [error] state]
   {:state (assoc state
                  :data nil
+                 :effective-data nil
                  :loading? false
                  :error (.-message error))})
 
