@@ -10,13 +10,17 @@
 
 ;;; config
 
-(goog-define env "dev")
+(goog-define environment "dev")
 
 (def root
   (str
-   (if (= env "dev")
+   (if (= environment "dev")
      "http://localhost:8080"
-     (js/window.location))
+     (str
+         js/location.protocol "//"
+         js/location.hostname
+         (if js/location.port (str ":" js/location.port) "")
+         js/location.pathname))
    "/_media"))
 
 ;;; tools

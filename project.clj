@@ -47,7 +47,7 @@
                ;; lein cljsbuild once min
                {:id "min"
                 :source-paths ["src"]
-                :compiler {:closure-defines {"jukebox-client.core.env" "prod"}
+                :compiler {:closure-defines {jukebox-client.core.environment "prod"}
                            :output-to "resources/public/js/compiled/jukebox_client.js"
                            :main jukebox-client.core
                            :optimizations :advanced
