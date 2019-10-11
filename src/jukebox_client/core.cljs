@@ -15,13 +15,16 @@
 (def root
   (str
    (if (= environment "dev")
-     "http://localhost:8080"
-     (str
-         js/location.protocol "//"
-         js/location.hostname
-         (if js/location.port (str ":" js/location.port) "")
-         js/location.pathname))
-   "/_media"))
+     "http://localhost:8080/"
+     (let [loc (str
+                js/location.protocol "//"
+                js/location.hostname
+                (if js/location.port (str ":" js/location.port) "")
+                js/location.pathname)]
+       (if (not (str/ends-with? loc "/"))
+         (str loc "/")
+         loc)))
+   "_media"))
 
 ;;; tools
 
@@ -82,18 +85,18 @@
   (ant/breadcrumb
    (let [parts (history-path-parts)]
      (for [i (range (count parts))
-           :let [path (str/join "/" (subvec parts 0 (inc i)))]]
+           :let [path (str (str/join "/" (subvec parts 0 (inc i))) "/")]]
        (if (zero? i)
          (ant/breadcrumb-item
           {:id :home}
-          [:a {:href "#"} (ant/icon {:type :home})])
+          [:a {:href "#/"} (ant/icon {:type :home})])
          (ant/breadcrumb-item
           {:id path}
           [:a {:href (str "#" path)} (js/decodeURI (nth parts i))]))))))
 
 (rum/defc GoDown
     [name]
-    [:a {:href (str "#" (history-path) "/" name)} name])
+    [:a {:href (str "#" (history-path) name "/")} name])
 
 (rum/defc PlayList
   [root path data]
@@ -216,7 +219,7 @@
 
 (defonce history
   (doto (Html5History.)
-    #_(.setToken "/")
+    (.setToken "/")
     (events/listen
      HistoryEventType/NAVIGATE
      (fn [event]
