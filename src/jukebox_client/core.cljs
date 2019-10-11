@@ -6,7 +6,8 @@
             [cljs.core.async :as async]
             [goog.events :as events]
             [goog.history.EventType :as HistoryEventType]
-            [cljsjs.filesaverjs])
+            [cljsjs.filesaverjs]
+            [cljsjs.moment])
   (:import (goog.history Html5History)))
 
 ;;; config
@@ -133,13 +134,25 @@
 
                         {:title "Name"
                          :dataIndex :name
+                         :sorter (fn [a b]
+                                   (let [f #(aget % "name")]
+                                     (compare (f a) (f b))))
+                         :defaultSortOrder "ascend"
                          :render (fn [name item]
                                    (if (= (aget item "type") "directory")
                                      (GoDown name)
                                      name))}
-                        #_{:title "Modified"
-                           :width 0
-                           :dataIndex :mtime}]}))
+                        {:title "Modified"
+                         :width 0
+                         :dataIndex :mtime
+                         :sortDirections ["descend" "ascend"]
+                         :sorter (fn [a b]
+                                   (let [f #(-> % (aget "mtime") (js/Date.parse))]
+                                     (compare (f a) (f b))))
+
+                         :render (fn [mtime]
+                                   (-> (js/moment. mtime)
+                                       (.format "YYYY-MM-DD")))}]}))
 
 (rum/defc App <
   rum/reactive
