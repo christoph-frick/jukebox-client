@@ -30,6 +30,13 @@
 
 ;;; tools
 
+(defn path-from-location
+  []
+  (let [hash js/location.hash]
+    (if (= "" hash)
+      "/"
+      (str/replace-first hash "#" ""))))
+
 (defn request
   [url]
   (-> url
@@ -78,7 +85,10 @@
 
 (defn history-path
   []
-  (.getToken history))
+  (let [token (.getToken history)]
+    (if (not (str/starts-with? token "/"))
+      (str "/" token)
+      token)))
 
 (defn history-path-parts
   []
@@ -182,12 +192,13 @@
 (defmulti navigation identity)
 
 (defmethod navigation :init []
-  {:http {:url root
-          :on-success :on-success
-          :on-failure :on-failure}
-   :state {:root root
-           :path "/"
-           :loading? true}})
+  (let [path (path-from-location)]
+    {:http {:url (str root path)
+            :on-success :on-success
+            :on-failure :on-failure}
+     :state {:root root
+             :path path
+             :loading? true}}))
 
 (defmethod navigation :goto [_ [path] {:keys [root] :as state}]
   {:http {:url (str root path)
@@ -241,7 +252,6 @@
 
 (defonce history
   (doto (Html5History.)
-    (.setToken "/")
     (events/listen
      HistoryEventType/NAVIGATE
      (fn [event]
