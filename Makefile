@@ -3,7 +3,9 @@ all:
 release:
 	lein do clean, cljsbuild once min
 
-deploy: release
+deploy: release redeploy
+
+redeploy:
 	rsync -av --delete resources/public/ hwergelmir:/usr/local/www/data/jukebox/
 
-.PHONY: all release deploy
+.PHONY: all release redeploy deploy
