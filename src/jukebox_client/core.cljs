@@ -3,7 +3,6 @@
             [antizer.rum :as ant]
             [rum.core :as rum]
             [citrus.core :as citrus]
-            [cljs.core.async :as async]
             [goog.events :as events]
             [goog.history.EventType :as HistoryEventType]
             [cljsjs.filesaverjs]
