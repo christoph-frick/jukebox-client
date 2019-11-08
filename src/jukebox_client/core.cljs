@@ -168,7 +168,6 @@
                          :sorter (fn [a b]
                                    (let [f #(aget % "name")]
                                      (compare (f a) (f b))))
-                         :defaultSortOrder "ascend"
                          :render (fn [name item]
                                    (if (= (aget item "type") "directory")
                                      (GoDown name)
@@ -176,6 +175,7 @@
                         {:title "Modified"
                          :width 0
                          :dataIndex :mtime
+                         :defaultSortOrder "descend"
                          :sortDirections ["descend" "ascend"]
                          :sorter (fn [a b]
                                    (let [f #(-> % (aget "mtime") (js/Date.parse))]
