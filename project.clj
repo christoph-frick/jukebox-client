@@ -9,8 +9,8 @@
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [org.clojure/clojurescript "1.10.520"]
                  [org.clojure/core.async  "0.4.500"]
-                 [rum "0.11.3"]
-                 [net.ofnir/antizer "3.22.0-0"]
+                 [rum "0.11.4"]
+                 [net.ofnir/antizer "3.24.3-0"]
                  [cljsjs/filesaverjs "1.3.3-0"]
                  [clj-commons/citrus "3.2.3"]]
 
