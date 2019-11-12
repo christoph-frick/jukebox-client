@@ -1,7 +1,8 @@
 (ns jukebox-client.core
   (:require [clojure.string :as str]
-            [antizer.rum :as ant]
+            [clojure.core.async :as a]
             [rum.core :as rum]
+            [antizer.rum :as ant]
             [citrus.core :as citrus]
             [goog.events :as events]
             [goog.history.EventType :as HistoryEventType]
@@ -63,20 +64,41 @@
   (fn [x]
     (= (aget x "type") type)))
 
-(defn build-playlist
-  [root]
-  ; TODO: recurse
-  (-> root
-      (request)
-      (.then (partial filter (is-type?-fn "file")))
-      (.then (partial map (partial item-to-path root)))))
-
-(defn playlist
-  [root]
-  (-> root
-      (build-playlist)
-      (.then to-playlist)
-      (.then download-playlist)))
+(defn playlist [url]
+  (let [items (a/chan (a/dropping-buffer 1000))
+        results (a/chan (a/dropping-buffer 25))
+        transform (a/pipeline 1 items (mapcat
+                                       (fn [[root items]]
+                                         (map (fn [js-item]
+                                                (let [url (item-to-path root js-item)
+                                                      item (js->clj js-item)
+                                                      {:strs [type]} item]
+                                                  {:type type :url url}))
+                                              items)))
+                              results)
+        [queue files] (a/split (fn [{:keys [type]}] (= type "directory")) items 25 1000)]
+    ; prime the queue
+    (a/put! queue {:url url})
+    (a/go-loop []
+      ; wait for 1s or take the next thing from the queue
+      (let [timeout (a/timeout 1000)
+            [val ch] (a/alts! [queue timeout])]
+        (if (= ch timeout)
+          ; on timeout build the playlist
+          (do
+            (a/close! files)
+            (let [files (a/<! (a/into [] files))]
+              (->> files
+                   (map :url)
+                   (to-playlist)
+                   (download-playlist))))
+          ; otherwise fetch the queue item
+          (do
+            (let [{:keys [url]} val]
+              (-> (request url)
+                  (.then (fn [data]
+                           (a/go (a/>! results [url data])))))
+              (recur))))))))
 
 ;;; history
 
