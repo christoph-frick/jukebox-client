@@ -7,8 +7,8 @@
   :min-lein-version "2.9.1"
 
   :dependencies [[org.clojure/clojure "1.10.1"]
-                 [org.clojure/clojurescript "1.10.520"]
-                 [org.clojure/core.async  "0.4.500"]
+                 [org.clojure/clojurescript "1.10.597"]
+                 [org.clojure/core.async  "0.6.532"]
                  [rum "0.11.4"]
                  [net.ofnir/antizer "3.24.3-0"]
                  [cljsjs/filesaverjs "1.3.3-0"]
@@ -92,7 +92,7 @@
              ;; :server-logfile false
              }
 
-  :profiles {:dev {:dependencies [[binaryage/devtools "0.9.10"]
+  :profiles {:dev {:dependencies [[binaryage/devtools "0.9.11"]
                                   [figwheel-sidecar "0.5.19"]
                                   [cider/piggieback "0.4.2"]]
                    :repl-options {:nrepl-middleware [cider.piggieback/wrap-cljs-repl]}

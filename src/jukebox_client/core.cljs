@@ -64,21 +64,23 @@
   (fn [x]
     (= (aget x "type") type)))
 
-(defn playlist [url]
+(defn- playlist-transform
+  [root js-item]
+  (let [url (item-to-path root js-item)
+        item (js->clj js-item)
+        {:strs [type]} item]
+    {:type type :url url}))
+
+(defn playlist [root js-item]
   (let [items (a/chan (a/dropping-buffer 1000))
         results (a/chan (a/dropping-buffer 25))
         transform (a/pipeline 1 items (mapcat
                                        (fn [[root items]]
-                                         (map (fn [js-item]
-                                                (let [url (item-to-path root js-item)
-                                                      item (js->clj js-item)
-                                                      {:strs [type]} item]
-                                                  {:type type :url url}))
-                                              items)))
+                                         (map (partial playlist-transform root) items)))
                               results)
         [queue files] (a/split (fn [{:keys [type]}] (= type "directory")) items 25 1000)]
-    ; prime the queue
-    (a/put! queue {:url url})
+    ; prime the chain
+    (a/put! items (playlist-transform root js-item))
     (a/go-loop []
       ; wait for 1s or take the next thing from the queue
       (let [timeout (a/timeout 1000)
@@ -152,7 +154,7 @@
                                                 :ghost true
                                                 :shape :circle
                                                 :size :large
-                                                :onClick (fn [] (println) (playlist (str root "/" path "/" (aget item (js/encodeURI "name")))))}))}
+                                                :onClick (fn [] (println) (playlist (str root "/" path) item))}))}
                         {:title "Type"
                          :align :center
                          :width 0
