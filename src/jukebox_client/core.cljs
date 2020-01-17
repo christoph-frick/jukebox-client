@@ -30,6 +30,14 @@
 
 ;;; tools
 
+(defn split-path
+  [path]
+  (str/split path "/"))
+
+(defn join-path
+  [path-segments]
+  (str/join "/" (map #(js/encodeURI %) path-segments)))
+
 (defn path-from-location
   []
   (let [hash js/location.hash]
@@ -55,6 +63,14 @@
   [root item]
   (str root "/" (js/encodeURI (aget item "name"))))
 
+(defn path-to-root-and-item
+  [root path]
+  (print  {:root root :path path})
+  (let [path-segments (split-path (js/decodeURI path))
+        [root-path-segments item-name] ((juxt butlast last) path-segments)]
+    [(str root "/" (join-path root-path-segments))
+     #js {:name item-name :type "directory"}]))
+
 (defn to-playlist
   [urls]
   (str/join "\n" urls))
@@ -72,6 +88,7 @@
     {:type type :url url}))
 
 (defn playlist [root js-item]
+    (print {:root root :js-item js-item})
   (let [items (a/chan (a/dropping-buffer 1000))
         results (a/chan (a/dropping-buffer 25))
         transform (a/pipeline 1 items (mapcat
@@ -115,7 +132,7 @@
 
 (defn history-path-parts
   []
-  (str/split (history-path) "/"))
+  (split-path (history-path)))
 
 ;;; components
 
@@ -124,7 +141,7 @@
   (ant/breadcrumb
    (let [parts (history-path-parts)]
      (for [i (range (count parts))
-           :let [path (str (str/join "/" (subvec parts 0 (inc i))) "/")]]
+           :let [path (str (join-path (subvec parts 0 (inc i))) "/")]]
        (if (zero? i)
          (ant/breadcrumb-item
           {:id :home}
@@ -137,6 +154,15 @@
     [name]
     [:a {:href (str "#" (history-path) name "/")} name])
 
+(rum/defc PlayButton
+  [on-click-fn]
+  (ant/button {:icon :caret-right
+               :type :primary
+               :ghost true
+               :shape :circle
+               :size :large
+               :onClick on-click-fn}))
+
 (rum/defc PlayList
   [loading? root path data]
   (ant/table {:loading loading?
@@ -145,16 +171,10 @@
                            :showTotal (fn [total [start end]] (str start "-" end " of " total " items"))
                            :showQuickJumper true}
               :dataSource data
-              :columns [{:title ""
+              :columns [{:title (PlayButton (fn [] (apply playlist (path-to-root-and-item root path))))
                          :align :center
                          :width 0
-                         :render (fn [_ item]
-                                   (ant/button {:icon :caret-right
-                                                :type :primary
-                                                :ghost true
-                                                :shape :circle
-                                                :size :large
-                                                :onClick (fn [] (println) (playlist (str root "/" path) item))}))}
+                         :render (fn [_ item] (PlayButton (fn [] (playlist (str root "/" path) item))))}
                         {:title "Type"
                          :align :center
                          :width 0
