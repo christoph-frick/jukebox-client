@@ -211,7 +211,7 @@
   rum/reactive
   [r]
   (let [{:keys [loading? random? error root path filter-term effective-data]} (rum/react (citrus/subscription r [:navigation]))]
-    (ant/layout
+    (ant/layout {:style {:height "100vh"}}
      (ant/layout-content
       {:style {:padding "0 2em"}}
       [:div {:style {:margin "2ex 0"}}
@@ -227,7 +227,6 @@
                  (ant/button {:on-click #(citrus/dispatch! r :navigation :randomize) :clicked true :type (if random? "primary" "")} "Random")
                  (ant/button {:on-click #(citrus/dispatch! r :navigation :reset) :title "Reset filters"} (ant/icon {:type "rollback"}))))]
       [:div
-       {:style {:height "200px"}}
        (cond
          error (ant/message-error error)
          :else (PlayList loading? root path effective-data))]))))
