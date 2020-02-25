@@ -250,6 +250,7 @@
           :on-failure :on-failure}
    :state (assoc state
                  :path path
+                 :random? nil
                  :filter-term nil
                  :data nil
                  :effective-data nil
