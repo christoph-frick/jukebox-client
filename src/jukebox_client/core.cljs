@@ -161,7 +161,7 @@
                :ghost true
                :shape :circle
                :size :large
-               :onClick on-click-fn}))
+               :on-click on-click-fn}))
 
 (rum/defc PlayList
   [loading? root path data]
@@ -210,20 +210,22 @@
 (rum/defc App <
   rum/reactive
   [r]
-  (let [{:keys [loading? error root path filter-term effective-data]} (rum/react (citrus/subscription r [:navigation]))]
+  (let [{:keys [loading? random? error root path filter-term effective-data]} (rum/react (citrus/subscription r [:navigation]))]
     (ant/layout
      (ant/layout-content
       {:style {:padding "0 2em"}}
       [:div {:style {:margin "2ex 0"}}
        (ant/row
-        (ant/col {:span 18}
+        (ant/col {:span 16}
                  (Breadcrumbs))
         (ant/col {:span 6 :align :right}
                  (ant/input-search {:value filter-term
                                     :placeholder "Filter by name"
                                     :allow-clear true
-                                    :on-change #(citrus/dispatch! r :navigation :filter (.-value (.-target %)))})))]
-
+                                    :on-change #(citrus/dispatch! r :navigation :filter (.-value (.-target %)))}))
+        (ant/col {:span 2 :align :right}
+                 (ant/button {:on-click #(citrus/dispatch! r :navigation :randomize) :clicked true :type (if random? "primary" "")} "Random")
+                 (ant/button {:on-click #(citrus/dispatch! r :navigation :reset) :title "Reset filters"} (ant/icon {:type "rollback"}))))]
       [:div
        {:style {:height "200px"}}
        (cond
@@ -258,8 +260,20 @@
 (defmethod navigation :filter [_ [term] {:keys [data] :as state}]
   (let [lower-case-term (str/lower-case term)]
     {:state (assoc state
+                   :random? nil
                    :filter-term term
                    :effective-data (seq (sort-by #(aget % "name") (filter #(str/includes? (str/lower-case (aget % "name")) lower-case-term) data))))}))
+
+(defmethod navigation :randomize [_ _ {:keys [data] :as state}]
+    {:state (assoc state
+                   :random? true
+                   :effective-data (seq (take 10 (shuffle data))))})
+
+(defmethod navigation :reset [_ _ {:keys [data] :as state}]
+    {:state (assoc state
+                   :random? nil
+                   :filter-term nil
+                   :effective-data data)})
 
 (defmethod navigation :on-success [_ [resp] state]
   {:state (assoc state
