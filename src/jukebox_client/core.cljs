@@ -217,14 +217,14 @@
       {:style {:padding "0 2em"}}
       [:div {:style {:margin "2ex 0"}}
        (ant/row
-        (ant/col {:span 16}
+        (ant/col {:span 12}
                  (Breadcrumbs))
-        (ant/col {:span 6 :align :right}
+        (ant/col {:span 12 :align :right}
                  (ant/input-search {:value filter-term
                                     :placeholder "Filter by name"
                                     :allow-clear true
-                                    :on-change #(citrus/dispatch! r :navigation :filter (.-value (.-target %)))}))
-        (ant/col {:span 2 :align :right}
+                                    :style {:width "20em"}
+                                    :on-change #(citrus/dispatch! r :navigation :filter (.-value (.-target %)))})
                  (ant/button {:on-click #(citrus/dispatch! r :navigation :randomize) :clicked true :type (if random? "primary" "")} "Random")
                  (ant/button {:on-click #(citrus/dispatch! r :navigation :reset) :title "Reset filters"} (ant/icon {:type "rollback"}))))]
       [:div
