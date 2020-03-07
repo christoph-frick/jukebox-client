@@ -32,7 +32,8 @@
 
 (defn split-path
   [path]
-  (str/split path "/"))
+  (->> (str/split path "/")
+       (mapv #(js/decodeURI %))))
 
 (defn join-path
   [path-segments]
