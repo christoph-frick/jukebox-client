@@ -174,11 +174,11 @@
               :dataSource data
               :columns [{:title (PlayButton (fn [] (apply playlist (path-to-root-and-item root path))))
                          :align :center
-                         :width 0
+                         :width 1
                          :render (fn [_ item] (PlayButton (fn [] (playlist (str root "/" path) item))))}
                         {:title "Type"
                          :align :center
-                         :width 0
+                         :width 1
                          :dataIndex :type
                          :render (fn [type]
                                    (ant/icon {:type (case type
@@ -196,7 +196,7 @@
                                      (GoDown name)
                                      name))}
                         {:title "Modified"
-                         :width 0
+                         :width 1
                          :dataIndex :mtime
                          :defaultSortOrder "descend"
                          :sortDirections ["descend" "ascend"]
