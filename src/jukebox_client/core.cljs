@@ -168,7 +168,7 @@
   [loading? root path data]
   (ant/table {:loading loading?
               :style {:background "white"}
-              :pagination {:position :top
+              :pagination {:position :bottom
                            :showTotal (fn [total [start end]] (str start "-" end " of " total " items"))
                            :showQuickJumper true}
               :dataSource data
