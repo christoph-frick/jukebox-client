@@ -191,7 +191,7 @@
                                           (playlist (str root "/" path) item)))))}
                         {:title "Type"
                          :align :center
-                         :width 1
+                         :width "8em"
                          :dataIndex :type
                          :render (fn [type]
                                    (ant/icon {:type (icon-by-type type)}))}
@@ -205,7 +205,8 @@
                                      (GoDown name)
                                      name))}
                         {:title "Modified"
-                         :width 1
+                         :width "12em"
+                         :align "right"
                          :dataIndex :mtime
                          :defaultSortOrder "descend"
                          :sortDirections ["descend" "ascend"]
