@@ -8,9 +8,9 @@
 
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [org.clojure/clojurescript "1.10.597"]
-                 [org.clojure/core.async  "0.6.532"]
+                 [org.clojure/core.async  "1.0.567"]
                  [rum "0.11.4"]
-                 [net.ofnir/antizer "3.24.3-0"]
+                 [net.ofnir/antizer "3.26.12-0"]
                  [cljsjs/filesaverjs "1.3.3-0"]
                  [clj-commons/citrus "3.2.3"]]
 
@@ -92,7 +92,7 @@
              ;; :server-logfile false
              }
 
-  :profiles {:dev {:dependencies [[binaryage/devtools "0.9.11"]
+  :profiles {:dev {:dependencies [[binaryage/devtools "1.0.0"]
                                   [figwheel-sidecar "0.5.19"]
                                   [cider/piggieback "0.4.2"]]
                    :repl-options {:nrepl-middleware [cider.piggieback/wrap-cljs-repl]}
