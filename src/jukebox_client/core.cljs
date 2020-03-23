@@ -171,20 +171,24 @@
   (ant/table {:loading loading?
               :style {:background "white"}
               :pagination {:position :bottom
-                           :showTotal (fn [total [start end]] (str start "-" end " of " total " items"))
+                           :showTotal (fn [total [start end]]
+                                        (str start "-" end " of " total " items"))
                            :showQuickJumper true}
               :dataSource data
               :columns [{:title (PlayButton
                                  "Play all (recursive)"
                                  :bars
-                                 (fn [] (apply playlist (path-to-root-and-item root path))))
+                                 (fn []
+                                   (apply playlist (path-to-root-and-item root path))))
                          :align :center
                          :width 1
-                         :render (fn [_ item] (let [type (aget item "type")]
-                                                (PlayButton
-                                                 (str "Play " (case type "directory" "directory (recursive)" "file"))
-                                                 (icon-by-type type)
-                                                 (fn [] (playlist (str root "/" path) item)))))}
+                         :render (fn [_ item]
+                                   (let [type (aget item "type")]
+                                     (PlayButton
+                                      (str "Play " (case type "directory" "directory (recursive)" "file"))
+                                      (icon-by-type type)
+                                      (fn []
+                                          (playlist (str root "/" path) item)))))}
                         {:title "Type"
                          :align :center
                          :width 1
