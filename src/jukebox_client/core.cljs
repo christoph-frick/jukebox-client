@@ -156,13 +156,20 @@
     [:a {:href (str "#" (history-path) name "/")} name])
 
 (rum/defc PlayButton
-  [on-click-fn]
-  (ant/button {:icon :caret-right
-               :type :primary
+  [title icon on-click-fn]
+  (ant/button {:title title
+               :icon :caret-right
                :ghost true
-               :shape :circle
-               :size :large
-               :on-click on-click-fn}))
+               :type :primary
+               :on-click on-click-fn}
+              (ant/icon {:type icon})))
+
+(defn icon-by-type
+  [type-str]
+  (case type-str
+    "directory" :folder
+    "file" :file
+    :question))
 
 (rum/defc PlayList
   [loading? root path data]
@@ -172,20 +179,23 @@
                            :showTotal (fn [total [start end]] (str start "-" end " of " total " items"))
                            :showQuickJumper true}
               :dataSource data
-              :columns [{:title (PlayButton (fn [] (apply playlist (path-to-root-and-item root path))))
+              :columns [{:title (PlayButton
+                                 "Play all (recursive)"
+                                 :bars
+                                 (fn [] (apply playlist (path-to-root-and-item root path))))
                          :align :center
                          :width 1
-                         :render (fn [_ item] (PlayButton (fn [] (playlist (str root "/" path) item))))}
+                         :render (fn [_ item] (let [type (aget item "type")]
+                                                (PlayButton
+                                                 (str "Play " (case type "directory" "directory (recursive)" "file"))
+                                                 (icon-by-type type)
+                                                 (fn [] (playlist (str root "/" path) item)))))}
                         {:title "Type"
                          :align :center
                          :width 1
                          :dataIndex :type
                          :render (fn [type]
-                                   (ant/icon {:type (case type
-                                                      "directory" :folder
-                                                      "file" :file
-                                                      :question)}))}
-
+                                   (ant/icon {:type (icon-by-type type)}))}
                         {:title "Name"
                          :dataIndex :name
                          :sorter (fn [a b]
