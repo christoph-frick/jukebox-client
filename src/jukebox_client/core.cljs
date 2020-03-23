@@ -76,11 +76,6 @@
   [urls]
   (str/join "\n" urls))
 
-(defn is-type?-fn
-  [type]
-  (fn [x]
-    (= (aget x "type") type)))
-
 (defn- playlist-transform
   [root js-item]
   (let [url (item-to-path root js-item)
