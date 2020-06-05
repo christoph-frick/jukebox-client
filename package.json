@@ -1,0 +1,11 @@
+{
+  "name": "jukebox-client",
+  "version": "0.0.1",
+  "dependencies": {
+    "antd": "^4.3.1",
+    "filesaverjs": "^1.2.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-scripts": "3.4.1"
+  }
+}
