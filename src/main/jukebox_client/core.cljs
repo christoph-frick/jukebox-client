@@ -5,7 +5,7 @@
             [citrus.core :as citrus]
             [goog.events :as events]
             [goog.history.EventType :as HistoryEventType]
-            ["filesaverjs" :as FileSaver]
+            ["file-saver" :as file-saver]
             ["moment" :as moment]
             ["antd/es/breadcrumb" :default Breadcrumb]
             ["antd/es/icon" :default Icon]
@@ -63,7 +63,7 @@
 
 (defn download-playlist
     [data]
-    (FileSaver/saveAs
+    (file-saver/saveAs
         (js/Blob.
             [data]
             #js {:type "audio/mpegurl"})
