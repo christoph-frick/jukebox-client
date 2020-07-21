@@ -78,7 +78,7 @@
   (let [path-segments (split-path (js/decodeURI path))
         [root-path-segments item-name] ((juxt butlast last) path-segments)]
     [(str root "/" (join-path root-path-segments))
-     #js {:name item-name :type "directory"}]))
+     [#js {:name item-name :type "directory"}]]))
 
 (defn to-playlist
   [urls]
@@ -91,7 +91,7 @@
         {:strs [type]} item]
     {:type type :url url}))
 
-(defn playlist [root js-item]
+(defn playlist [root js-items]
   (let [items (a/chan (a/dropping-buffer 1000))
         results (a/chan (a/dropping-buffer 25))
         transform (a/pipeline 1 items (mapcat
@@ -100,7 +100,9 @@
                               results)
         [queue files] (a/split (fn [{:keys [type]}] (= type "directory")) items 25 1000)]
     ; prime the chain
-    (a/put! items (playlist-transform root js-item))
+    (run! (fn [js-item]
+              (a/put! items (playlist-transform root js-item)))
+          js-items)
     (a/go-loop []
       ; wait for 1s or take the next thing from the queue
       (let [timeout (a/timeout 1000)
@@ -167,6 +169,18 @@
                :on-click on-click-fn}
               (rum/adapt-class icon {})))
 
+(rum/defc PlaySelected
+  [root path selected]
+  [:div
+   (rum/adapt-class Button {:title "Play selected"
+                            :icon (rum/adapt-class (.-CaretRightOutlined Icons) {})
+                            :ghost true
+                            :type :primary
+                            :disabled (not (seq selected))
+                            :on-click (fn []
+                                        (playlist (str root "/" path) selected))}
+                    (str/join ", " (map #(aget % "name") selected)))])
+
 (defn icon-by-type
   [type-str]
   (case type-str
@@ -175,44 +189,51 @@
     (.-QuestionCircleOutlined Icons)))
 
 (rum/defc PlayList
-  [loading? root path data]
-  (rum/adapt-class Table
+  [r loading? root path selected data]
+  (let [row-key-fn (fn [item]
+                    (str root "/" path "/" (aget item "name")))] (rum/adapt-class Table
                    {:loading loading?
+                    :footer (fn []
+                              (PlaySelected root path selected))
+                    :row-selection {:seletion-type "checkbox"
+                                    :selectedRowKeys (map row-key-fn selected)
+                                    :onChange (fn [selected-row-keys selected-rows]
+                                                       (citrus/dispatch! r :navigation :select selected-rows))}
                     :pagination {:position :bottom
                                  :showTotal (fn [total [start end]]
-                                                (str start "-" end " of " total " items"))
+                                              (str start "-" end " of " total " items"))
                                  :showQuickJumper true}
                     :dataSource data
-                    :rowKey (fn [item] (str root "/" path "/" (aget item "name")))
+                    :rowKey row-key-fn
                     :columns [{:title (PlayButton
-                                          "Play all (recursive)"
-                                          (.-BarsOutlined Icons)
-                                          (fn []
-                                              (apply playlist (path-to-root-and-item root path))))
+                                       "Play all (recursive)"
+                                       (.-BarsOutlined Icons)
+                                       (fn []
+                                         (apply playlist (path-to-root-and-item root path))))
                                :align :center
                                :width 1
                                :render (fn [_ item]
-                                           (let [type (aget item "type")]
-                                               (PlayButton
-                                                   (str "Play " (case type "directory" "directory (recursive)" "file"))
-                                                   (icon-by-type type)
-                                                   (fn []
-                                                       (playlist (str root "/" path) item)))))}
+                                         (let [type (aget item "type")]
+                                           (PlayButton
+                                            (str "Play " (case type "directory" "directory (recursive)" "file"))
+                                            (icon-by-type type)
+                                            (fn []
+                                              (playlist (str root "/" path) [item])))))}
                               {:title "Type"
                                :align :center
                                :width "8em"
                                :dataIndex :type
                                :render (fn [type]
-                                           (rum/adapt-class (icon-by-type type) {}))}
+                                         (rum/adapt-class (icon-by-type type) {}))}
                               {:title "Name"
                                :dataIndex :name
                                :sorter (fn [a b]
-                                           (let [f #(aget % "name")]
-                                               (compare (f a) (f b))))
+                                         (let [f #(aget % "name")]
+                                           (compare (f a) (f b))))
                                :render (fn [name item]
-                                           (if (= (aget item "type") "directory")
-                                               (GoDown name)
-                                               name))}
+                                         (if (= (aget item "type") "directory")
+                                           (GoDown name)
+                                           name))}
                               {:title "Modified"
                                :width "12em"
                                :align "right"
@@ -220,17 +241,17 @@
                                :defaultSortOrder "descend"
                                :sortDirections ["descend" "ascend"]
                                :sorter (fn [a b]
-                                           (let [f #(-> % (aget "mtime") (js/Date.parse))]
-                                               (compare (f a) (f b))))
+                                         (let [f #(-> % (aget "mtime") (js/Date.parse))]
+                                           (compare (f a) (f b))))
 
                                :render (fn [mtime]
-                                           (-> (moment. mtime)
-                                               (.format "YYYY-MM-DD")))}]}))
+                                         (-> (moment. mtime)
+                                             (.format "YYYY-MM-DD")))}]})))
 
 (rum/defc App <
   rum/reactive
   [r]
-  (let [{:keys [loading? random? error root path filter-term effective-data]} (rum/react (citrus/subscription r [:navigation]))]
+  (let [{:keys [loading? random? error root path filter-term effective-data selected]} (rum/react (citrus/subscription r [:navigation]))]
     (rum/adapt-class Layout {:style {:height "100vh"}}
      (rum/adapt-class (.-Content Layout)
       {:style {:padding "0 2em"}}
@@ -249,7 +270,7 @@
       [:div
        (cond
          error (rum/adapt-class Alert {:type "error" :message error})
-         :else (PlayList loading? root path effective-data))]))))
+         :else (PlayList r loading? root path selected effective-data))]))))
 
 ;;; controllers
 
@@ -275,6 +296,7 @@
                  :data nil
                  :effective-data nil
                  :error nil
+                 :selected []
                  :loading? true)})
 
 (defmethod navigation :filter [_ [term] {:keys [data] :as state}]
@@ -288,6 +310,10 @@
     {:state (assoc state
                    :random? true
                    :effective-data (into-array (take 10 (shuffle data))))})
+
+(defmethod navigation :select [_ [items] state]
+  {:state (assoc state
+                 :selected items)})
 
 (defmethod navigation :reset [_ _ {:keys [data] :as state}]
     {:state (assoc state
