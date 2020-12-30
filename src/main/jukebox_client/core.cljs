@@ -193,7 +193,7 @@
                     :footer (fn []
                               (PlaySelected root path selected))
                     :row-selection {:seletion-type "checkbox"
-                                    :selectedRowKeys (map row-key-fn selected)
+                                    :selectedRowKeys (clj->js (map row-key-fn selected))
                                     :onChange (fn [_ selected-rows]
                                                        (citrus/dispatch! r :navigation :select selected-rows))}
                     :pagination {:position :bottom
