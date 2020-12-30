@@ -2,10 +2,10 @@
   "name": "jukebox-client",
   "version": "0.0.1",
   "dependencies": {
-    "antd": "^4.6.6",
-    "file-saver": "^2.0.2",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "react-scripts": "^3.4.3"
+    "antd": "^4.9.4",
+    "file-saver": "^2.0.5",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
+    "react-scripts": "^3.4.4"
   }
 }
