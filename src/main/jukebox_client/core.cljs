@@ -8,12 +8,10 @@
             ["file-saver" :as file-saver]
             ["moment" :as moment]
             ["antd/es/breadcrumb" :default Breadcrumb]
-            ["antd/es/icon" :default Icon]
             ["antd/es/button" :default Button]
             ["antd/es/table" :default Table]
             ["antd/es/grid" :as Grid]
             ["antd/es/layout" :default Layout]
-            ["antd/es/row" :default Row]
             ["antd/es/input" :default Input]
             ["antd/es/alert" :default Alert]
             ["@ant-design/icons" :as Icons])
@@ -94,10 +92,10 @@
 (defn playlist [root js-items]
   (let [items (a/chan (a/dropping-buffer 1000))
         results (a/chan (a/dropping-buffer 25))
-        transform (a/pipeline 1 items (mapcat
-                                       (fn [[root items]]
-                                         (map (partial playlist-transform root) items)))
-                              results)
+        _ (a/pipeline 1 items (mapcat
+                                (fn [[root items]]
+                                  (map (partial playlist-transform root) items)))
+                      results)
         [queue files] (a/split (fn [{:keys [type]}] (= type "directory")) items 25 1000)]
     ; prime the chain
     (run! (fn [js-item]
@@ -117,16 +115,15 @@
                    (to-playlist)
                    (download-playlist))))
           ; otherwise fetch the queue item
-          (do
-            (let [{:keys [url]} val]
-              (-> (request url)
-                  (.then (fn [data]
-                           (a/go (a/>! results [url data])))))
-              (recur))))))))
+          (let [{:keys [url]} val]
+            (-> (request url)
+                (.then (fn [data]
+                         (a/go (a/>! results [url data])))))
+            (recur)))))))
 
 ;;; history
 
-(declare history)
+(declare ^Html5History history)
 
 (defn history-path
   []
@@ -197,7 +194,7 @@
                               (PlaySelected root path selected))
                     :row-selection {:seletion-type "checkbox"
                                     :selectedRowKeys (map row-key-fn selected)
-                                    :onChange (fn [selected-row-keys selected-rows]
+                                    :onChange (fn [_ selected-rows]
                                                        (citrus/dispatch! r :navigation :select selected-rows))}
                     :pagination {:position :bottom
                                  :showTotal (fn [total [start end]]
@@ -357,7 +354,7 @@
   (doto (Html5History.)
     (events/listen
      HistoryEventType/NAVIGATE
-     (fn [event]
+     (fn [^goog.history.Event event]
        (citrus/dispatch! reconciler :navigation :goto (.-token event))))
     (.setEnabled true)))
 
