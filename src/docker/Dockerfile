@@ -1,4 +1,4 @@
-FROM clojure:openjdk-14-tools-deps-alpine
+FROM clojure:openjdk-15-tools-deps-alpine
 
 WORKDIR /build
 
