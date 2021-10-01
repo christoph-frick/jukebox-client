@@ -165,7 +165,7 @@
                            :icon (rum/adapt-class (.-CaretRightOutlined Icons) {})
                            :ghost true
                            :type :primary
-                           :on-click on-click-fn}
+                           :onClick on-click-fn}
                    (rum/adapt-class icon {})))
 
 (rum/defc PlaySelected
@@ -176,7 +176,7 @@
                             :ghost true
                             :type :primary
                             :disabled (not (seq selected))
-                            :on-click (fn []
+                            :onClick (fn []
                                         (playlist (str root "/" path) selected))}
                     (str/join ", " (map #(aget % "name") selected)))])
 
@@ -195,7 +195,7 @@
                      {:loading loading?
                       :footer (fn []
                                 (PlaySelected root path selected))
-                      :row-selection {:seletion-type "checkbox"
+                      :rowSelection {:seletion-type "checkbox"
                                       :selectedRowKeys (clj->js (map row-key-fn selected))
                                       :onChange (fn [_ selected-rows]
                                                   (citrus/dispatch! r :navigation :select selected-rows))}
@@ -256,11 +256,11 @@
                                                         (rum/adapt-class Grid/Col {:span 12 :align :right}
                                                                          (rum/adapt-class (.-Search Input) {:value filter-term
                                                                                                             :placeholder "Filter by name"
-                                                                                                            :allow-clear true
+                                                                                                            :allowClear true
                                                                                                             :style {:width "20em"}
-                                                                                                            :on-change #(citrus/dispatch! r :navigation :filter (.-value (.-target %)))})
-                                                                         (rum/adapt-class Button {:on-click #(citrus/dispatch! r :navigation :randomize) :clicked "true" :type (if random? "primary" "")} "Random")
-                                                                         (rum/adapt-class Button {:on-click #(citrus/dispatch! r :navigation :reset) :title "Reset filters"} (rum/adapt-class (.-RollbackOutlined Icons) {}))))]
+                                                                                                            :onChange #(citrus/dispatch! r :navigation :filter (.-value (.-target %)))})
+                                                                         (rum/adapt-class Button {:onClick #(citrus/dispatch! r :navigation :randomize) :clicked "true" :type (if random? "primary" "")} "Random")
+                                                                         (rum/adapt-class Button {:onClick #(citrus/dispatch! r :navigation :reset) :title "Reset filters"} (rum/adapt-class (.-RollbackOutlined Icons) {}))))]
                                       [:div
                                        (cond
                                          error (rum/adapt-class Alert {:type "error" :message error})
