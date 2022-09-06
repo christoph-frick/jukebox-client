@@ -78,7 +78,7 @@
     [(str root "/" (join-path root-path-segments))
      [#js {:name item-name :type "directory"}]]))
 
-(defn to-playlist
+(defn- urls-to-playlist
   [urls]
   (str/join "\n" urls))
 
@@ -88,6 +88,13 @@
         item (js->clj js-item)
         {:strs [type]} item]
     {:type type :url url}))
+
+(defn files-to-download-playlist
+  [files]
+  (->> files
+       (map :url)
+       (urls-to-playlist)
+       (download-playlist)))
 
 (defn playlist [root js-items]
   (let [items (a/chan (a/dropping-buffer 1000))
@@ -112,10 +119,7 @@
           (do
             (a/close! files)
             (let [files (a/<! (a/into [] files))]
-              (->> files
-                   (map :url)
-                   (to-playlist)
-                   (download-playlist))))
+              (files-to-download-playlist files)))
           ; otherwise fetch the queue item
           (let [{:keys [url]} val]
             (-> (request url)
@@ -160,25 +164,31 @@
   [:a {:href (str "#" (history-path) name "/")} name])
 
 (rum/defc PlayButton
-  [title icon on-click-fn]
+  [title ghost on-click-fn]
   (rum/adapt-class Button {:title title
                            :icon (rum/adapt-class (.-CaretRightOutlined Icons) {})
-                           :ghost true
+                           :ghost ghost
+                           :shape :circle
                            :type :primary
-                           :onClick on-click-fn}
-                   (rum/adapt-class icon {})))
+                           :onClick on-click-fn}))
 
 (rum/defc PlaySelected
   [root path selected]
-  [:div
-   (rum/adapt-class Button {:title "Play selected"
-                            :icon (rum/adapt-class (.-CaretRightOutlined Icons) {})
-                            :ghost true
-                            :type :primary
-                            :disabled (not (seq selected))
-                            :onClick (fn []
-                                        (playlist (str root "/" path) selected))}
-                    (str/join ", " (map #(aget % "name") selected)))])
+  (let [selected? (seq selected)]
+    [:div
+     (rum/adapt-class Button {:title "Play selected"
+                              :icon (rum/adapt-class (.-CaretRightOutlined Icons) {})
+                              :shape :circle
+                              :type :primary
+                              :host (not selected?)
+                              :disabled (not selected?)
+                              :onClick (fn []
+                                         (playlist (str root "/" path) selected))}
+                      )
+     [:span {:style {:margin-left "1em"}}
+      (if selected?
+        (str/join ", " (map #(aget % "name") selected))
+        "select items to play")]]))
 
 (defn icon-by-type
   [type-str]
@@ -207,7 +217,7 @@
                       :rowKey row-key-fn
                       :columns [{:title (PlayButton
                                          "Play all (recursive)"
-                                         (.-BarsOutlined Icons)
+                                         true
                                          (fn []
                                            (apply playlist (path-to-root-and-item root path))))
                                  :align :center
@@ -216,9 +226,15 @@
                                            (let [type (aget item "type")]
                                              (PlayButton
                                               (str "Play " (case type "directory" "directory (recursive)" "file"))
-                                              (icon-by-type type)
+                                              false
                                               (fn []
                                                 (playlist (str root "/" path) [item])))))}
+                                {:title "T."
+                                 :dataIndex :type
+                                 :width 1
+                                 :align :center
+                                 :render (fn [type item]
+                                            (rum/adapt-class (icon-by-type type) {}))}
                                 {:title "Name"
                                  :dataIndex :name
                                  :sorter (fn [a b]
