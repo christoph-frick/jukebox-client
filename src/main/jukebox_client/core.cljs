@@ -37,6 +37,22 @@
 
 ;;; tools
 
+(defn item-name
+  [item]
+  (aget item "name"))
+
+(defn item-type
+  [item]
+  (aget item "type"))
+
+(defn item-mtime
+  [item]
+  (aget item "mtime"))
+
+(defn parse-date
+  [s]
+  (js/Date.parse s))
+
 (defn split-path
   [path]
   (->> (str/split path "/")
@@ -69,7 +85,7 @@
 
 (defn item-to-path
   [root item]
-  (str root "/" (js/encodeURI (aget item "name"))))
+  (str root "/" (js/encodeURI (item-name item))))
 
 (defn path-to-root-and-item
   [root path]
@@ -187,7 +203,7 @@
                       )
      [:span {:style {:margin-left "1em"}}
       (if selected?
-        (str/join ", " (map #(aget % "name") selected))
+        (str/join ", " (map item-name selected))
         "select items to play")]]))
 
 (defn icon-by-type
@@ -200,7 +216,7 @@
 (rum/defc PlayList
   [r loading? root path selected data]
   (let [row-key-fn (fn [item]
-                     (str root "/" path "/" (aget item "name")))]
+                     (str root "/" path "/" (item-name item)))]
     (rum/adapt-class Table
                      {:loading loading?
                       :footer (fn []
@@ -223,12 +239,13 @@
                                  :align :center
                                  :width 1
                                  :render (fn [_ item]
-                                           (let [type (aget item "type")]
-                                             (PlayButton
-                                              (str "Play " (case type "directory" "directory (recursive)" "file"))
-                                              false
-                                              (fn []
-                                                (playlist (str root "/" path) [item])))))}
+                                           (PlayButton
+                                             (str "Play " (case (item-type item)
+                                                            "directory" "directory (recursive)"
+                                                            "file"))
+                                             false
+                                             (fn []
+                                               (playlist (str root "/" path) [item]))))}
                                 {:title "T."
                                  :dataIndex :type
                                  :width 1
@@ -238,10 +255,10 @@
                                 {:title "Name"
                                  :dataIndex :name
                                  :sorter (fn [a b]
-                                           (let [f #(aget % "name")]
+                                           (let [f item-name]
                                              (compare (f a) (f b))))
                                  :render (fn [name item]
-                                           (if (= (aget item "type") "directory")
+                                           (if (= (item-type item) "directory")
                                              (GoDown name)
                                              name))}
                                 {:title "Modified"
@@ -251,7 +268,7 @@
                                  :defaultSortOrder "descend"
                                  :sortDirections ["descend" "ascend"]
                                  :sorter (fn [a b]
-                                           (let [f #(-> % (aget "mtime") (js/Date.parse))]
+                                           (let [f (comp parse-date item-mtime)]
                                              (compare (f a) (f b))))
 
                                  :render (fn [mtime]
@@ -314,7 +331,7 @@
     {:state (assoc state
                    :random? nil
                    :filter-term term
-                   :effective-data (into-array (sort-by #(aget % "name") (filter #(str/includes? (str/lower-case (aget % "name")) lower-case-term) data))))}))
+                   :effective-data (into-array (sort-by item-name (filter #(str/includes? (str/lower-case (item-name %)) lower-case-term) data))))}))
 
 (defmethod navigation :randomize [_ _ {:keys [data] :as state}]
   {:state (assoc state
