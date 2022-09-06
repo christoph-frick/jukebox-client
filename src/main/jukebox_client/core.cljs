@@ -160,6 +160,10 @@
 
 ;;; components
 
+(rum/defc Icon
+  [icon]
+  (rum/adapt-class icon {}))
+
 (rum/defc Breadcrumbs
   []
   (rum/adapt-class Breadcrumb
@@ -170,7 +174,7 @@
                        (if (zero? i)
                          (rum/adapt-class (.-Item Breadcrumb)
                                           {:key (key-gen :home)}
-                                          [:a {:href "#/"} (rum/adapt-class (.-HomeOutlined Icons) {})])
+                                          [:a {:href "#/"} (Icon (.-HomeOutlined Icons))])
                          (rum/adapt-class (.-Item Breadcrumb)
                                           {:key (key-gen path)}
                                           [:a {:href (str "#" path)} (js/decodeURI (nth parts i))]))))))
@@ -182,7 +186,7 @@
 (rum/defc PlayButton
   [title ghost on-click-fn]
   (rum/adapt-class Button {:title title
-                           :icon (rum/adapt-class (.-CaretRightOutlined Icons) {})
+                           :icon (Icon (.-CaretRightOutlined Icons))
                            :ghost ghost
                            :shape :circle
                            :type :primary
@@ -193,7 +197,7 @@
   (let [selected? (seq selected)]
     [:div
      (rum/adapt-class Button {:title "Play selected"
-                              :icon (rum/adapt-class (.-CaretRightOutlined Icons) {})
+                              :icon (Icon (.-CaretRightOutlined Icons))
                               :shape :circle
                               :type :primary
                               :host (not selected?)
@@ -251,7 +255,7 @@
                                  :width 1
                                  :align :center
                                  :render (fn [type item]
-                                            (rum/adapt-class (icon-by-type type) {}))}
+                                            (Icon (icon-by-type type)))}
                                 {:title "Name"
                                  :dataIndex :name
                                  :sorter (fn [a b]
@@ -293,7 +297,7 @@
                                                                                                             :style {:width "20em"}
                                                                                                             :onChange #(citrus/dispatch! r :navigation :filter (.-value (.-target %)))})
                                                                          (rum/adapt-class Button {:onClick #(citrus/dispatch! r :navigation :randomize) :clicked "true" :type (if random? "primary" "")} "Random")
-                                                                         (rum/adapt-class Button {:onClick #(citrus/dispatch! r :navigation :reset) :title "Reset filters"} (rum/adapt-class (.-RollbackOutlined Icons) {}))))]
+                                                                         (rum/adapt-class Button {:onClick #(citrus/dispatch! r :navigation :reset) :title "Reset filters"} (Icon (.-RollbackOutlined Icons)))))]
                                       [:div
                                        (cond
                                          error (rum/adapt-class Alert {:type "error" :message error})
