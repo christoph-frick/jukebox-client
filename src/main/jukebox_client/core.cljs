@@ -6,7 +6,9 @@
             [goog.events :as events]
             [goog.history.EventType :as HistoryEventType]
             ["file-saver" :as file-saver]
-            ["moment" :as moment]
+            ["dayjs" :as dayjs]
+            ["antd/es/config-provider" :default ConfigProvider]
+            ["antd/es/theme$default" :refer (darkAlgorithm)]
             ["antd/es/breadcrumb" :default Breadcrumb]
             ["antd/es/button" :default Button]
             ["antd/es/table" :default Table]
@@ -276,13 +278,14 @@
                                              (compare (f a) (f b))))
 
                                  :render (fn [mtime]
-                                           (-> (moment. mtime)
+                                           (-> (dayjs mtime)
                                                (.format "YYYY-MM-DD")))}]})))
 
 (rum/defc App <
   rum/reactive
   [r]
-  (let [{:keys [loading? random? error root path filter-term effective-data selected]} (rum/react (citrus/subscription r [:navigation]))]
+  (rum/adapt-class ConfigProvider {:theme {:algorithm darkAlgorithm :token {:colorPrimary "#d4380d"}}}
+                   (let [{:keys [loading? random? error root path filter-term effective-data selected]} (rum/react (citrus/subscription r [:navigation]))]
     (rum/adapt-class Layout {:style {:height "100vh"}}
                      (rum/adapt-class (.-Content Layout)
                                       {:style {:padding "0 2em"}}
@@ -301,7 +304,7 @@
                                       [:div
                                        (cond
                                          error (rum/adapt-class Alert {:type "error" :message error})
-                                         :else (PlayList r loading? root path selected effective-data))]))))
+                                         :else (PlayList r loading? root path selected effective-data))])))))
 
 ;;; controllers
 

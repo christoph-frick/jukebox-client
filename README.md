@@ -15,7 +15,6 @@ Copy the following files from a successful build:
 
 - `resources/public/index.html`
 - `target/main.js`
-- `node_modules/antd/dist/antd.dark.min.css`
 
 to your web server into a directory (e.g. `/jukebox` relative to your
 document root).
