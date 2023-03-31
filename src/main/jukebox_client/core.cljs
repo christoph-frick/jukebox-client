@@ -58,11 +58,11 @@
 (defn split-path
   [path]
   (->> (str/split path "/")
-       (mapv #(js/decodeURI %))))
+       (mapv #(js/decodeURIComponent %))))
 
 (defn join-path
   [path-segments]
-  (str/join "/" (map #(js/encodeURI %) path-segments)))
+  (str/join "/" (map #(js/encodeURIComponent %) path-segments)))
 
 (defn path-from-location
   []
@@ -87,11 +87,11 @@
 
 (defn item-to-path
   [root item]
-  (str root "/" (js/encodeURI (item-name item))))
+  (str root "/" (js/encodeURIComponent (item-name item))))
 
 (defn path-to-root-and-item
   [root path]
-  (let [path-segments (split-path (js/decodeURI path))
+  (let [path-segments (split-path (js/decodeURIComponent path))
         [root-path-segments item-name] ((juxt butlast last) path-segments)]
     [(str root "/" (join-path root-path-segments))
      [#js {:name item-name :type "directory"}]]))
