@@ -284,27 +284,28 @@
 (rum/defc App <
   rum/reactive
   [r]
-  (rum/adapt-class ConfigProvider {:theme {:algorithm darkAlgorithm :token {:colorPrimary "#d4380d"}}}
-                   (let [{:keys [loading? random? error root path filter-term effective-data selected]} (rum/react (citrus/subscription r [:navigation]))]
-    (rum/adapt-class Layout {:style {:height "100vh"}}
-                     (rum/adapt-class (.-Content Layout)
-                                      {:style {:padding "0 2em"}}
-                                      [:div {:style {:margin "2ex 0"}}
-                                       (rum/adapt-class Grid/Row {}
-                                                        (rum/adapt-class Grid/Col {:span 12}
-                                                                         (Breadcrumbs))
-                                                        (rum/adapt-class Grid/Col {:span 12 :align :right}
-                                                                         (rum/adapt-class (.-Search Input) {:value filter-term
-                                                                                                            :placeholder "Filter by name"
-                                                                                                            :allowClear true
-                                                                                                            :style {:width "20em"}
-                                                                                                            :onChange #(citrus/dispatch! r :navigation :filter (.-value (.-target %)))})
-                                                                         (rum/adapt-class Button {:onClick #(citrus/dispatch! r :navigation :randomize) :clicked "true" :type (if random? "primary" "")} "Random")
-                                                                         (rum/adapt-class Button {:onClick #(citrus/dispatch! r :navigation :reset) :title "Reset filters"} (Icon (.-RollbackOutlined Icons)))))]
-                                      [:div
-                                       (cond
-                                         error (rum/adapt-class Alert {:type "error" :message error})
-                                         :else (PlayList r loading? root path selected effective-data))])))))
+  (let [color "#d4380d"]
+    (rum/adapt-class ConfigProvider {:theme {:algorithm darkAlgorithm :token {:colorPrimary color :colorLink color}}}
+                     (let [{:keys [loading? random? error root path filter-term effective-data selected]} (rum/react (citrus/subscription r [:navigation]))]
+                       (rum/adapt-class Layout {:style {:height "100vh"}}
+                                        (rum/adapt-class (.-Content Layout)
+                                                         {:style {:padding "0 2em"}}
+                                                         [:div {:style {:margin "2ex 0"}}
+                                                          (rum/adapt-class Grid/Row {}
+                                                                           (rum/adapt-class Grid/Col {:span 12}
+                                                                                            (Breadcrumbs))
+                                                                           (rum/adapt-class Grid/Col {:span 12 :align :right}
+                                                                                            (rum/adapt-class (.-Search Input) {:value filter-term
+                                                                                                                               :placeholder "Filter by name"
+                                                                                                                               :allowClear true
+                                                                                                                               :style {:width "20em"}
+                                                                                                                               :onChange #(citrus/dispatch! r :navigation :filter (.-value (.-target %)))})
+                                                                                            (rum/adapt-class Button {:onClick #(citrus/dispatch! r :navigation :randomize) :clicked "true" :type (if random? "primary" "")} "Random")
+                                                                                            (rum/adapt-class Button {:onClick #(citrus/dispatch! r :navigation :reset) :title "Reset filters"} (Icon (.-RollbackOutlined Icons)))))]
+                                                         [:div
+                                                          (cond
+                                                            error (rum/adapt-class Alert {:type "error" :message error})
+                                                            :else (PlayList r loading? root path selected effective-data))]))))))
 
 ;;; controllers
 
