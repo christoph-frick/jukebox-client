@@ -1,8 +1,8 @@
 {:source-paths ["src/main"]
- :dependencies [[rum "0.12.9" :exclusions [[cljsjs/react] [cljsjs/react-dom]]]
+ :dependencies [[rum "0.12.10" :exclusions [[cljsjs/react] [cljsjs/react-dom]]]
                 [clj-commons/citrus "3.3.0"]
-                [org.clojure/core.async  "1.5.648"]
-                [cider/cider-nrepl "0.28.5"]]
+                [org.clojure/core.async  "1.6.673"]
+                [cider/cider-nrepl "0.31.0"]]
  :nrepl {:host "0.0.0.0" :port 3333}
  :http {:host "0.0.0.0" :port 9630}
  :dev-http {3449 {:host "0.0.0.0" :roots ["resources/public/" "target/" "node_modules/antd/dist/"]}}
