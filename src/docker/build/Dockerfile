@@ -12,5 +12,3 @@ RUN apt-get update && apt-get install -y \
 RUN npm config set cache /build/.npm --global
 
 RUN npm install -g shadow-cljs
-
-ENTRYPOINT ["shadow-cljs"]

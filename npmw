@@ -1,2 +1,1 @@
-#!/bin/sh
-docker-compose run -u `id -u`:`id -g` --rm --entrypoint npm build $*
+./buildw
