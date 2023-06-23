@@ -256,7 +256,7 @@
                                  :dataIndex :type
                                  :width 1
                                  :align :center
-                                 :render (fn [type item]
+                                 :render (fn [type _]
                                             (Icon (icon-by-type type)))}
                                 {:title "Name"
                                  :dataIndex :name
