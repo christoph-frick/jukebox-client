@@ -210,7 +210,7 @@
      [:span {:style {:margin-left "1em"}}
       (if selected?
         (str/join ", " (map item-name selected))
-        "select items to play")]]))
+        [:em "select items to play"])]]))
 
 (defn icon-by-type
   [type-str]
